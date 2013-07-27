@@ -1,6 +1,7 @@
 import json
 import requests
 import os
+import time
 
 with open('../data/auth_data.txt', 'rt') as conn:
     auth_data = conn.read()
@@ -23,12 +24,17 @@ for j in user_jsons:
 
 
 # Scrape the urls per user and return the languages
+throttle_period = 0.7 # 5k requests/hour = 1.3 requests / s, so wait 0.7s btwn requests
 bytes_threshold = 100
 user_langs = []
 for user in language_urls:
     temp = {}
     for repo_url in user:
-        repo_langs = requests.get(repo_url, auth=(user, pword))
+        repo_langs = requests.get(repo_url,
+                                  auth=(user,
+                                        pword
+                                        )
+                                  )
         langs = repo_langs.json()
         for l in langs:
             if langs[l] > bytes_threshold:
@@ -36,6 +42,7 @@ for user in language_urls:
                     temp[l] += 1
                 else:
                     temp[l] = 1
+    time.sleep(throttle_period)
     user_langs.append(temp)
                 
 
