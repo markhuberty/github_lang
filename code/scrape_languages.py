@@ -3,6 +3,7 @@ import requests
 import os
 import time
 import random
+import re
 
 with open('../data/auth_data.txt', 'rt') as conn:
     auth_data = conn.read().splitlines()
@@ -45,7 +46,7 @@ for j in repo_jsons:
 # Total repo count is very large.
 # So shuffle by user and then retrieve up to N repos
 k_users = 200000
-throttle_period = 0.7 # 5k requests/hour = 1.3 requests / s, so wait 0.7s btwn requests
+throttle_period = 1 # 5k requests/hour = 1.3 requests / s, so wait 0.7s btwn request
 bytes_threshold = 100
 
 
@@ -56,11 +57,12 @@ def return_random_user(k_vals, dict_input):
         yield (k, dict_input[k])
 
 # user_gen = return_random_user(user_language_urls, 300000)
-
-user_langs = {}
-user_count = 0
 users = user_language_urls.keys()
 random.shuffle(users)
+user_langs = {}
+lang_readme = {}
+user_count = 0
+
 
 for git_user in users:
     lang_urls = user_language_urls[git_user]
@@ -86,6 +88,19 @@ for git_user in users:
             print 'dead url'
             continue
 
+        readme_url = re.sub('languages', 'readme', repo_url)
+        repo_readme = requests.get(readme_url,
+                                   auth=(user, pword),
+                                   headers={'Accept':'application/vnd.github.v3.raw'}
+                                   )
+
+        try:
+            repo_readme.raise_for_status()
+            readme = repo_readme.text
+        except requests.exceptions.HTTPError:
+            readme = ''
+
+        
         langs = repo_langs.json()
         for l in langs:
             if langs[l] > bytes_threshold:
@@ -93,11 +108,30 @@ for git_user in users:
                     temp[l] += 1
                 else:
                     temp[l] = 1
+                if readme != '':
+                    if l in lang_readme:
+                        lang_readme[l].append(readme)
+                    else:
+                        lang_readme[l] = [readme]
         time.sleep(throttle_period)
     if len(temp) > 0:
         user_langs[git_user] = temp
         user_count += 1
 
+
+import unidecode
+readme_list = []
+for k, v in lang_readme.iteritems():
+    for r in v:
+        r_spaces = ' '.join(r.split())
+        readme_list.append((k, unidecode.unidecode(r_spaces)))
+
+import csv
+with open('../data/lang_readme_map.csv', 'wt') as f:
+    writer = csv.writer(f)
+    writer.writerow(['lang', 'readme'])
+    for item in readme_list:
+        writer.writerow(item)
 
 import pandas as pd
 all_langs = []
@@ -132,7 +166,7 @@ lang_cooc = df_user_lang_binary.T.dot(df_user_lang_binary)
 lang_cooc = lang_cooc / user_lang_counts
 lang_cooc.to_csv('../data/github_lang_cooc_matrix.csv', index=True)
 
-
+import numpy as np
 p_ab = pd.DataFrame(np.triu(lang_cooc), index=lang_cooc.index, columns=lang_cooc.columns)
 p_ba = pd.DataFrame(np.tril(lang_cooc), index=lang_cooc.index, columns=lang_cooc.columns)
 
