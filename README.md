@@ -23,7 +23,12 @@ Task complementarity
 
 Languages are ultimately tools, though, and tools help solve problems. Hence we'd like to know how tools group together based on the tasks they solve. Here, StackOverflow provides some valuable data. Each question on StackOverflow gets a set of tags, which usually include both the programming language(s) covered in the question, and the problem the question is trying to solve. For example, a question might be tagged (`C`, `sorting`), while another question might be tagged (`Java`, `sorting`). That's a trivial example, but it gets to the point: a question usually revolves around a *tool* and a *task*. We can think of the tasks as bridges between tools. Languages are complementary to the extent they help solve the same tasks. 
 
-We can compute the task relations relatively simply: for two tags `T` and `T*`, compute the complementarity as *max* (P(`T` | `T*`), P(`T*` | `T`)). Why *max*? Consider the tags "unix" and "bash". P("bash" | "unix") ~ 0 (there's a lot of stuff tied to unix, of which bash is only one small part), while P("unix" | "bash") ~ 1. Using the max helps to maintain the structure of pairwise tag relations that we expect.  
+We can compute the task relations relatively simply: for two tags `T` and `T*`, compute the complementarity as *max* (P(`T` | `T*`), P(`T*` | `T`)). Why *max*? Consider the tags "unix" and "bash". P("bash" | "unix") ~ 0 (there's a lot of stuff tied to unix, of which bash is only one small part), while P("unix" | "bash") ~ 1. Using the max helps to maintain the structure of pairwise tag relations that we expect. 
+
+From tags to languages
+------------
+
+Github users languages, StackOverflow uses tags. We map from one to the other via exact string matching. 
 
 
 
