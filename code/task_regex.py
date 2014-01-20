@@ -9,7 +9,7 @@ re_mobile = re.compile('mobile|smart phone')
 re_cloud = re.compile('cloud')
 re_finance = re.compile('finance')
 re_encryption = re.compile('encryption|security')
-re_social = re.compile('twitter|facebook|myspace|google plus|tumblr)
+re_social = re.compile('twitter|facebook|myspace|google plus|tumblr')
 
 
 re_dict = {'ml':re_ml,
